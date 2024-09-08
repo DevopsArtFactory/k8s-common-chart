@@ -36,7 +36,7 @@ spec:
                     port:
                       name: use-annotation
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: v2.4.9
+    targetRevision: 2.37.6
   syncPolicy:
     automated:
       prune: true

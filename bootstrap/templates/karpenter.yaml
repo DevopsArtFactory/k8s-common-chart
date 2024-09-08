@@ -10,7 +10,7 @@ spec:
   project: infra
   source:
     repoURL: public.ecr.aws/karpenter
-    targetRevision: v0.37.0
+    targetRevision: 0.37.0
     chart: karpenter
     helm:
       values: |-

@@ -18,10 +18,11 @@ spec:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-karpenter-controller
         settings:
-          aws:
-            clusterName: {{ .Values.clusterName }}
-            clusterEndpoint: {{ .Values.clusterEndpoint }}
-            defaultInstanceProfile: eks-{{ .Values.clusterName }}-ng
+          clusterName: {{ .Values.clusterName }}
+          clusterEndpoint: {{ .Values.clusterEndpoint }}
+        featureGates:
+          drift: {{ .Values.karpenter.enable_drift }}
+          spotToSpotConsolidation: {{ .Values.karpenter.enable_spotToSpotConsolidation }}
         affinity: 
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:

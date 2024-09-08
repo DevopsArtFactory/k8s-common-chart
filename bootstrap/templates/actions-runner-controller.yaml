@@ -1,0 +1,50 @@
+{{- if or (not .Values.actionsrunner) (.Values.actionsrunner.enabled ) -}}
+ ---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actions-runner-controller
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://actions-runner-controller.github.io/actions-runner-controller
+    chart: actions-runner-controller
+    targetRevision: 0.25.2
+    helm:
+      values: |-
+        githubEnterpriseServerURL: {{ .Values.actionsrunner.githubURL }}
+        githubURL: {{ .Values.actionsrunner.githubURL }}
+        githubUploadURL: {{ .Values.actionsrunner.githubURL }}
+        runnerGithubURL: {{ .Values.actionsrunner.githubURL }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: controller-manager
+  namespace: actions-runner-system
+spec:
+  refreshInterval: 2h
+  secretStoreRef:
+    name: css-parameterstore
+    kind: ClusterSecretStore
+  target:
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: github-action
+  data: 
+    - secretKey: github_token
+      remoteRef:
+        key: github_action_pat
+{{- end }}

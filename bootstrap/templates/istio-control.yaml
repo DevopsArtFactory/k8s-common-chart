@@ -1,0 +1,32 @@
+{{- if or (not .Values.istio) (.Values.istio.enabled) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istiod
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/istio/istio
+    targetRevision: 1.23.0
+    path: manifests/charts/istio-control/istio-discovery
+    helm:
+      values: |
+        meshConfig: 
+          outboundTrafficPolicy:
+            mode: ALLOW_ANY
+          accessLogFile: /dev/stdout          
+        "sidecarInjectorWebhook": {
+          "rewriteAppHTTPProbe": false
+        }
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}

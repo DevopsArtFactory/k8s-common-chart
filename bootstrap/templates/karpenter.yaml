@@ -1,0 +1,50 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  namespace: argocd
+  name: karpenter
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  source:
+    repoURL: public.ecr.aws/karpenter
+    targetRevision: v0.37.2
+    chart: karpenter
+    helm:
+      values: |-
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-karpenter-controller
+        settings:
+          aws:
+            clusterName: {{ .Values.clusterName }}
+            clusterEndpoint: {{ .Values.clusterEndpoint }}
+            defaultInstanceProfile: eks-{{ .Values.clusterName }}-ng
+        affinity: 
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: karpenter.sh/provisioner-name
+                  operator: DoesNotExist
+              - matchExpressions:
+                - key: eks.amazonaws.com/nodegroup
+                  operator: In
+                  values:
+                  - {{ .Values.clusterName }}-ng-ondemand
+                  - {{ .Values.clusterName }}-ng-spot
+                    #        topologySpreadConstraints:
+                    #        - maxSkew: 1
+                    #          topologyKey: capacity-spread
+                    #          whenUnsatisfiable: DoNotSchedule
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karpenter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

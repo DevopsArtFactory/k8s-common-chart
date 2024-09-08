@@ -1,0 +1,65 @@
+# Name of the cluster
+clusterName: ""
+# AWS account id
+accountId: ""
+# VPC name
+vpcName: ""
+# Cluster endpoint
+# AWS Region
+awsRegion: ap-northeast-2
+proxy: ""
+no_proxy: ""
+clusterEndpoint: ""
+# NodeGroup instanceProfile
+affinity:
+  capacity_type:
+    - cpu_on_demand
+destinationServer: ""
+loadBalancerControllerlogLevel: debug
+repoURL: ""
+targetRevision: 0.0.0
+IngressInBoundCIDR: ""
+ingressACM: ""
+argoRollouts:
+  ingressHost: ""
+  WeightedRoutingValue: ""
+  RecordId: ""
+istio:
+  istiod:
+    podAnnotations:
+    serviceAnnotations:
+  enabled: true
+  meshConfig:
+    defaultProviders:
+      metrics:
+        - prometheus
+karpenter:
+  instanceProfile: ""
+  daemonset: ""
+  queueURL: ""
+datadog:
+  enabled: false
+  logs:
+    enabled: ""
+    containerCollectAll: ""
+  apm:
+    portEnabled: false
+  containerExclude: ""
+  containerInclude: ""
+  clusterAgent:
+    enabled: false
+    cluster_check:
+      enabled: false
+    dbm:
+      enabled: false
+      dbtype: ""
+      instances: ""
+  clusterChecksRunner:
+    enabled: true
+    jmx:
+      enabled: false
+sumologic:
+  enabled: false
+actionsrunner:
+  enabled: false
+  githubURL: ""

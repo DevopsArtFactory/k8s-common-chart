@@ -1,0 +1,117 @@
+{{- if or (not .Values.datadog) (.Values.datadog.enabled ) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: datadog
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://helm.datadoghq.com
+    chart: datadog
+    targetRevision: 3.29.2
+    helm:
+      values: |-
+        datadog:
+          clusterName: {{ .Values.clusterName }}
+          apiKeyExistingSecret: datadog-secrets
+          secretBackend:
+            command: "/readsecret_multiple_providers.sh"
+          logs:
+            enabled: {{ .Values.datadog.logs.enabled }}
+            containerCollectAll: {{ .Values.datadog.logs.containerCollectAll }}
+          apm:
+            portEnabled: {{ .Values.datadog.apm.portEnabled }}
+          containerExclude: {{ .Values.datadog.containerExclude }}
+          containerInclude: {{ .Values.datadog.containerInclude }}
+        clusterAgent:
+          enabled: {{ .Values.datadog.clusterAgent.enabled }}
+          {{- if .Values.datadog.clusterAgent.dbm.enabled }}
+          confd: 
+            {{ .Values.datadog.clusterAgent.dbm.dbtype }}.yaml: |-
+              cluster_check: {{ .Values.datadog.clusterAgent.cluster_check.enabled }}
+              init_config:
+              {{- with .Values.datadog.clusterAgent.dbm.instances }}
+              instances:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          {{- end }}
+          {{- if .Values.nodeAffinity }}
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: {{ .Values.nodeAffinity.key }}
+                      operator: In
+                      values:
+                        - {{ .Values.nodeAffinity.value }}
+          {{- end }}
+        clusterChecksRunner:
+          enabled: {{ .Values.datadog.clusterChecksRunner.enabled }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: datadog
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: datadog-secrets
+  namespace: datadog
+spec:
+  refreshInterval: 2h
+  secretStoreRef:
+    name: css-parameterstore
+    kind: ClusterSecretStore
+  target:
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: datadog
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: DATADOG_API_KEY
+    - secretKey: password
+      remoteRef:
+        key: DATADOG_DB_PASSWORD
+    {{- if .Values.datadog.clusterAgent.dbm.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: datadog-secret-reader
+  namespace: datadog
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["datadog-secrets"]
+    verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: datadog-read-secrets
+  namespace: datadog
+subjects:
+  - kind: ServiceAccount
+    name: datadog-cluster-checks
+    apiGroup: ""
+    namespace: datadog
+  - kind: ServiceAccount
+    name: datadog
+    apiGroup: ""
+    namespace: datadog
+roleRef:
+  kind: Role
+  name: datadog-secret-reader
+  apiGroup: ""
+    {{- end }}
+{{- end }}

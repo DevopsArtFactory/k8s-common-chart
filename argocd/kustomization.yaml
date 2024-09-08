@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  # Create the argocd namespace
+  - namespace.yaml
+
+  # ClusterSecretStore: Operator for getting secrets from secrets manager or ssm
+  - clustersecretstore.yaml
+
+  # Create a external secret to sync the data
+  - external-secrets.yaml
+
+  # Set up the argocd secrets 
+  - argocd-secrets.yaml
+
+  # Create the overall argocd Resources
+  - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
+  
+  # Create the ingress for argocd 
+  - argocd-ingress.yaml
+
+  # Register the bootstrap applications 
+  - bootstrap.yaml
+patches:
+  # Patch HA command option
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: argocd-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --insecure

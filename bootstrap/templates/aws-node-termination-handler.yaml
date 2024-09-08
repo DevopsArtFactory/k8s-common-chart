@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  namespace: argocd
+  name: aws-node-termination-handler
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  source:
+    repoURL: https://aws.github.io/eks-charts
+    chart: aws-node-termination-handler
+    targetRevision: 0.21.0
+    helm:
+      values: |-
+        awsRegion: ap-northeast-2
+        serviceAccount:
+          create: false
+          name: aws-node-termination-handler
+        {{- if .Values.karpenter.daemonset }} 
+        daemonsetNodeSelector:
+          karpenter.sh/capacity-type: spot
+        {{- end }}
+        enableSqsTerminationDraining: true
+        queueURL: {{ .Values.karpenter.queueURL }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-aws-node-termination-handler
+  labels:
+    app.kubernetes.io/instance: aws-node-termination-handler
+    app.kubernetes.io/name: aws-node-termination-handler
+    app.kubernetes.io/part-of: aws-node-termination-handler
+    cluster: {{ .Values.clusterName }}
+  name: aws-node-termination-handler
+  namespace: kube-system

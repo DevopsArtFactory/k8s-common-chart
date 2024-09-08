@@ -1,0 +1,73 @@
+{{- if or (not .Values.sumologic) (.Values.sumologic.enabled) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sumologic
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://sumologic.github.io/sumologic-kubernetes-collection
+    chart: sumologic
+    targetRevision: 4.10.0
+    helm:
+      values: |-
+        sumologic:
+          envFromSecret: sumologic-secrets
+          clusterName: {{ .Values.clusterName }}
+          logs:
+            container:
+              otelcol:
+                extraProcessors: 
+                  - resource/add-static-field:
+                      attributes:
+                        - action: insert
+                          key: source_type
+                          value: {{ .Values.sumologic.logs.sourceType }}
+              sourceCategory: {{ .Values.sumologic.logs.sourceCategory }}
+              sourceCategoryPrefix: {{ .Values.sumologic.logs.sourceCategoryPrefix }}
+              excludeNamespaceRegex: {{ .Values.sumologic.logs.excludeNamespaceRegex }}
+          metrics:
+            enabled: {{ .Values.sumologic.metrics.enabled }}
+          kube-prometheus-stack:
+            enabled: {{ .Values.sumologic.prometheus.enabled }}
+          events:
+            persistence:
+              enabled: {{ .Values.sumologic.events.persistence.enabled }}
+        metadata:
+          persistence:
+            enabled: {{ .Values.sumologic.metadata.persistence.enabled }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sumologic
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: sumologic-secrets
+  namespace: sumologic
+spec:
+  refreshInterval: 2h
+  secretStoreRef:
+    name: css-parameterstore
+    kind: ClusterSecretStore
+  target:
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: sumologic
+  data:
+    - secretKey: SUMOLOGIC_ACCESSID
+      remoteRef:
+        key: sumologic_accessid
+    - secretKey: SUMOLOGIC_ACCESSKEY
+      remoteRef:
+        key: sumologic_accesskey
+{{- end }}

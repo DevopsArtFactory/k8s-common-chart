@@ -1,3 +1,4 @@
+{{- if or (not .Values.nth) (.Values.nth.enabled ) -}}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -43,3 +44,4 @@ metadata:
     cluster: {{ .Values.clusterName }}
   name: aws-node-termination-handler
   namespace: kube-system
+{{- end }}

@@ -13,9 +13,9 @@ spec:
     helm:
       values: |-
         dashboard:
-          enabled: "true"
+          enabled: {{ .Values.argoRollouts.enabled }}
           ingress:
-            enabled: "true"
+            enabled:{{ .Values.argoRollouts.enabled }}
             ingressClassName: alb
             annotations:
               alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'

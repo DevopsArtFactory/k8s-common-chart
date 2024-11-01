@@ -46,5 +46,5 @@ spec:
   data: 
     - secretKey: github_token
       remoteRef:
-        key: github_action_pat
+        key: GITHUB_TOKEN
 {{- end }}

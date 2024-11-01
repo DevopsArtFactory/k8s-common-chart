@@ -10,13 +10,7 @@ spec:
   source:
     repoURL: https://actions-runner-controller.github.io/actions-runner-controller
     chart: actions-runner-controller
-    targetRevision: 0.27.6
-    helm:
-      values: |-
-        githubEnterpriseServerURL: {{ .Values.actionsrunner.githubURL }}
-        githubURL: {{ .Values.actionsrunner.githubURL }}
-        githubUploadURL: {{ .Values.actionsrunner.githubURL }}
-        runnerGithubURL: {{ .Values.actionsrunner.githubURL }}
+    targetRevision: 0.23.7
   destination:
     server: https://kubernetes.default.svc
     namespace: actions-runner-system

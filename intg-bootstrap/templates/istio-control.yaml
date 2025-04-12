@@ -15,14 +15,6 @@ spec:
       releaseName: istiod
       values: |
         pilot:
-          podAnnotations:
-            {{- with .Values.istio.istiod.podAnnotations }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          serviceAnnotations:
-            {{- with .Values.istio.istiod.serviceAnnotations }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
           {{- if .Values.affinity.capacity_type }}
           autoscaleMin: 2
           replicaCount: 2

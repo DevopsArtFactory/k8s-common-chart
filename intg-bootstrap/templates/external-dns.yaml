@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  namespace: argocd
+  name: {{ .Values.clusterName }}-external-dns
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.clusterName }}-infra
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: external-dns
+    targetRevision: 8.3.7
+    helm:
+      releaseName: external-dns
+      values: |-
+        sources:
+          - service
+          - ingress
+        aws:
+          region: "{{ .Values.awsRegion }}"
+        policy: sync
+        txtOwnerId: "{{ .Values.clusterName }}"
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-external-dns
+  destination:
+    server: {{ .Values.destinationServer }}
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

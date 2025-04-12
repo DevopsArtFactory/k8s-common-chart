@@ -1,20 +1,23 @@
-{{- if or (not .Values.karpenter) (.Values.karpenter.enabled ) -}}
+{{- if or (not .Values.karpenter) (.Values.karpenter.enabled) -}}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   namespace: argocd
-  name: karpenter
+  name: {{ .Values.clusterName }}-karpenter
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: infra
+  project: {{ .Values.clusterName }}-infra
   source:
     repoURL: public.ecr.aws/karpenter
     targetRevision: 1.3.3
     chart: karpenter
     helm:
+      releaseName: karpenter
       values: |-
+        nameOverride: karpenter
+        fullnameOverride: karpenter
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-karpenter-controller
@@ -42,7 +45,7 @@ spec:
                     #          topologyKey: capacity-spread
                     #          whenUnsatisfiable: DoNotSchedule
   destination:
-    server: https://kubernetes.default.svc
+    server: {{ .Values.destinationServer }}
     namespace: karpenter
   syncPolicy:
     automated:
@@ -51,3 +54,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
 {{- end }}
+

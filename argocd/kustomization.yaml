@@ -5,6 +5,12 @@ resources:
   # Create the argocd namespace
   - namespace.yaml
 
+  # Create the overall argocd Resources
+  - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
+
+  # Register the bootstrap applications 
+  - bootstrap.yaml
+
   # ClusterSecretStore: Operator for getting secrets from secrets manager or ssm
   - clustersecretstore.yaml
 
@@ -14,14 +20,8 @@ resources:
   # Set up the argocd secrets 
   - argocd-secrets.yaml
 
-  # Create the overall argocd Resources
-  - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
-  
   # Create the ingress for argocd 
   - argocd-ingress.yaml
-
-  # Register the bootstrap applications 
-  - bootstrap.yaml
 patches:
   # Patch HA command option
   - target:

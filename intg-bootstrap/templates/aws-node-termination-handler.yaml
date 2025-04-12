@@ -1,0 +1,49 @@
+{{- if or (not .Values.karpenter) (.Values.karpenter.enabled) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  namespace: argocd
+  name: {{ .Values.clusterName }}-aws-node-termination-handler
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.clusterName }}-infra
+  source:
+    repoURL: https://aws.github.io/eks-charts
+    chart: aws-node-termination-handler
+    targetRevision: 0.21.0
+    helm:
+      releaseName: aws-node-termination-handler
+      values: |-
+        awsRegion: ap-northeast-2
+        serviceAccount:
+          create: false
+          name: aws-node-termination-handler
+        {{- if .Values.karpenter.daemonset }} 
+        daemonsetNodeSelector:
+          karpenter.sh/capacity-type: spot
+        {{- end }}
+        {{- if .Values.affinity.capacity_type }}
+        affinity: 
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: capacity_type
+                  operator: In
+                  values: 
+                  {{- range .Values.affinity.capacity_type }}
+                  - {{ . }}
+                  {{- end }}
+        {{- end }}
+        enableSqsTerminationDraining: true
+        queueURL: {{ .Values.karpenter.queueURL }}
+  destination:
+    server: {{ .Values.destinationServer }}
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{- end }}

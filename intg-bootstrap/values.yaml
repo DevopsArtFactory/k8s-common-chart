@@ -1,0 +1,41 @@
+# common
+clusterName: ""
+accountId: ""
+vpcName: ""
+awsRegion: ""
+targetRevision: ""
+destinationServer: ""
+clusterEndpoint: ""
+
+# NodeGroup instanceProfile
+affinity:
+  capacity_type:
+    - cpu_on_demand
+
+# load-balancer
+loadBalancerControllerlogLevel: ""
+
+# argo-rollouts
+argoRollouts:
+  ingressHost: ""
+  WeightedRoutingValue: ""
+  RecordId: ""
+IngressInBoundCIDR: ""
+ingressACM: ""
+
+# NodeGroup instanceProfile
+karpenter:
+  daemonset: ""
+  queueURL: ""
+
+# datadog
+datadog:
+  enabled: false
+  logs:
+    enabled: false
+  clusterAgent:
+    enabled: false
+
+# sumologic
+sumologic:
+  enabled: false

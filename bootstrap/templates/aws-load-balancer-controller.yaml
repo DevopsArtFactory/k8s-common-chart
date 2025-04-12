@@ -19,13 +19,6 @@ spec:
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-alb-controller
-        env:
-          HTTP_PROXY: {{ .Values.proxy }}
-          HTTPS_PROXY: {{ .Values.proxy }}
-          NO_PROXY: {{ .Values.no_proxy }}
-          http_proxy: {{ .Values.proxy }}
-          https_proxy: {{ .Values.proxy }}
-          no_proxy: {{ .Values.no_proxy }}
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
@@ -45,7 +38,7 @@ spec:
   project: infra
   source:
     repoURL: https://github.com/aws/eks-charts.git
-    targetRevision: v0.0.122
+    targetRevision: v0.0.193
     path: stable/aws-load-balancer-controller/crds
   destination:
     server: https://kubernetes.default.svc

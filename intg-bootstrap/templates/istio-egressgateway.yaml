@@ -1,0 +1,31 @@
+{{- if or (not .Values.istio) (.Values.istio.enabled) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.clusterName }}-istio-egressgateway
+  namespace: argocd
+spec:
+  project: {{ .Values.clusterName }}-infra
+  source:
+    repoURL: https://github.com/istio/istio
+    targetRevision: 1.23.0
+    path: manifests/charts/gateways/istio-egress
+    helm:
+      releaseName: istio-egressgateway
+      values: |-
+        gateways:
+          istio-egressgateway:
+            {{- if .Values.affinity.capacity_type }}
+            nodeSelector:
+              capacity_type: cpu_on_demand
+            {{- end }}
+            autoscaleMin: 2
+  destination:
+    server: {{ .Values.destinationServer }}
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{- end }}

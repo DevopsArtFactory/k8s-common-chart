@@ -1,0 +1,72 @@
+{{- if or (not .Values.istio) (.Values.istio.enabled) -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.clusterName }}-istiod
+  namespace: argocd
+spec:
+  project: {{ .Values.clusterName }}-infra
+  source:
+    repoURL: https://github.com/istio/istio
+    targetRevision: 1.23.0
+    path: manifests/charts/istio-control/istio-discovery
+    helm:
+      releaseName: istiod
+      values: |
+        pilot:
+          podAnnotations:
+            {{- with .Values.istio.istiod.podAnnotations }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          serviceAnnotations:
+            {{- with .Values.istio.istiod.serviceAnnotations }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.affinity.capacity_type }}
+          autoscaleMin: 2
+          replicaCount: 2
+          affinity: 
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: capacity_type
+                    operator: In
+                    values: 
+                    {{- range .Values.affinity.capacity_type }}
+                    - {{ . }}
+                    {{- end }}
+          {{- end }}
+        meshConfig:
+          meshMTLS:
+            minProtocolVersion: TLSV1_3
+          accessLogFile: /dev/stdout
+          outboundTrafficPolicy:
+            mode: ALLOW_ANY
+          defaultProviders: 
+          {{- with .Values.istio.meshConfig.defaultProviders.metrics }}
+            metrics:
+              {{ . }}
+          {{- end }}
+          {{- with .Values.istio.meshConfig.defaultProviders.tracing }}
+            tracing:
+              {{ . }}
+          {{- end }}
+          {{- with .Values.istio.meshConfig.defaultProviders.accessLogging }}
+            accessLogging:
+              {{ . }}
+          {{- end }}
+        "sidecarInjectorWebhook": {
+          "rewriteAppHTTPProbe": false
+        }
+  destination:
+    server: {{ .Values.destinationServer }}
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}

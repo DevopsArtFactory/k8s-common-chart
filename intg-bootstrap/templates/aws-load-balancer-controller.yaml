@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://aws.github.io/eks-charts
     chart: aws-load-balancer-controller
-    targetRevision: 1.12.0
+    targetRevision: 1.11.0
     helm:
       releaseName: aws-load-balancer-controller
       values: |-
@@ -70,7 +70,7 @@ spec:
   project: {{ .Values.clusterName }}-infra
   source:
     repoURL: https://github.com/aws/eks-charts.git
-    targetRevision: v0.0.193
+    targetRevision: v0.0.189
     path: stable/aws-load-balancer-controller/crds
   destination:
     server: {{ .Values.destinationServer }}

@@ -33,23 +33,6 @@ spec:
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.accountId }}:role/eks-{{ .Values.clusterName }}-alb-controller
-        hostNetwork: true
-        ingressClass: nlb
-        disableIngressClassAnnotation: true
-        enableBackendSecurityGroup: false
-        enableShield: false
-        enableWaf: false
-        enableWafv2: false
-        resources:
-          limits:
-            cpu: 200m
-            memory: 500Mi
-          requests:
-            cpu: 100m
-            memory: 200Mi
-        podSecurityContext:
-          fsGroup: 1337
-        createIngressClassResource: false
         enableCertManager: true
   destination:
     server: {{ .Values.destinationServer }}
